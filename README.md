@@ -18,7 +18,6 @@ Where your edn looks something like this:
 {:cols       [0 1] ;; columns to extract
  :names      [:midi :audio] ;; names of the column
  :thresholds [2 2] ;; on/outset thresholds
- :tails      [500 500] ;; time after last threshold violation to define 'outset'
  :sr         500 ;; samplerate in khz
  :daw        "Studio One" ;; DAW name
  :buffer     128 ;; buffer size

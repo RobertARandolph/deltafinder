@@ -1,7 +1,6 @@
 {:cols       [0 1]
  :names      [:midi :audio]
  :thresholds [2 2]
- :tails      [500 500]
  :sr         500
  :daw        "Studio One"
  :buffer     128
