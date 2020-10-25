@@ -93,7 +93,7 @@
   (float (/ (delta xs) sr)))
 
 (defn signal->oz-data
-  "I really should document this."
+  "Takes a signal map, sample rate and title and returns a map for plotting."
   [signal sr title]
   (let [main-values (apply concat
                            (map (fn [x]
@@ -115,17 +115,17 @@
 
 
 (defn plot
-  [data]
+  [{keys [title signal data gap]}]
   {:$schema    "https://vega.github.io/schema/vega-lite/v4.json"
    :background "white"
    :config     {:concat {:spacing -100}}
-   :vconcat    [{:title    {:text     (:title data)
+   :vconcat    [{:title    {:text     title 
                             :fontSize 64
                             :orient   "top"
                             :align    "center"}
                  :width    1800
                  :height   1200
-                 :data     {:values (:signal data)} 
+                 :data     {:values signal} 
                  :mark     {:type        "line"
                             :interpolate "natural"}
                  :encoding {:color {:field  "item"
@@ -144,11 +144,11 @@
                                     :type  "quantitative"}}}
                 {:width    1800
                  :height   200
-                 :title    {:text     (str "Total Delay: " (:delay data) "ms")
+                 :title    {:text     (str "Total Delay: " delay "ms")
                             :fontSize 48
                             :orient   "bottom"                          
                             :align    "center"}
-                 :data     {:values (:gap data)}
+                 :data     {:values gap}
                  :mark     {:type        "line"
                             :strokeWidth 200}
                  :encoding {:title "test"
