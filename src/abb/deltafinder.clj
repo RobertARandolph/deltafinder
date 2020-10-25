@@ -71,7 +71,7 @@
   [file cols names thresholds]
   (let [c      (get-signals file cols)
         starts (map #(signal-onset % %2) c thresholds)
-        ends   (map #(signal-last-over-threshold % %2 %3) c thresholds)]
+        ends   (map #(signal-last-over-threshold % %2) c thresholds)]
     (map (fn [v n s e]
            {:values v
             :name   n
@@ -115,7 +115,7 @@
 
 
 (defn plot
-  [{keys [title signal data gap]}]
+  [{:keys [title signal delay gap]}]
   {:$schema    "https://vega.github.io/schema/vega-lite/v4.json"
    :background "white"
    :config     {:concat {:spacing -100}}
@@ -171,7 +171,8 @@
 
 
 (comment
-  (oz/view! (plot (signal->oz-data (setup-signal "StudioOne512Medium.csv" [0 1] [:midi :audio] [2 30] [500 500]) [0 1] 500 "Test Title")))
+  (:title (signal->oz-data (setup-signal "StudioOne512Medium.csv" [0 1] [:midi :audio] [2 2] ) [0 1] "Test Title"))
+  (oz/view! (plot (signal->oz-data (setup-signal "StudioOne128Minimum1.csv" [0 1] [:midi :audio] [2 2] ) [0 1] "Test Title")))
   (oz/start-server!)
   (-main "samplesettings.edn")
   (with-open [writer (clojure.java.io/writer "test.json")]
