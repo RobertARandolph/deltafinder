@@ -94,7 +94,7 @@
 
 (defn signal->oz-data
   "Takes a signal map, sample rate and title and returns a map for plotting."
-  [signal sr title]
+  [signal sr title subtitle]
   (let [main-values (apply concat
                            (map (fn [x]
                                   (let [values (:values x)
@@ -107,15 +107,16 @@
                                 signal))
         midi-end    (:end (first signal))
         audio-start (:start (second signal))]
-    {:signal main-values
-     :title  title
-     :gap    [{:time midi-end}
-              {:time audio-start}]
-     :delay  (delta-in-ms signal sr)}))
+    {:signal   main-values
+     :title    title
+     :subtitle subtitle
+     :gap      [{:time midi-end}
+                {:time audio-start}]
+     :delay    (delta-in-ms signal sr)}))
 
 
 (defn plot
-  [{:keys [title signal delay gap]}]
+  [{:keys [title subtitle signal delay gap]}]
   {:$schema    "https://vega.github.io/schema/vega-lite/v4.json"
    :background "white"
    :config     {:concat {:spacing -100}}
@@ -123,6 +124,7 @@
                             :fontSize 64
                             :orient   "top"
                             :align    "center"}
+                 :subtitle subtitle
                  :width    1800
                  :height   1200
                  :data     {:values signal} 
@@ -164,8 +166,10 @@
         first-cols                                                          (take 2 cols)
         filename                                                            (clojure.string/replace (str daw buffer setting index) #" " "")
         title                                                               (format "%s v%s - Buffer: %s - %s " daw version buffer setting)
-        oz-data                                                             (signal->oz-data (setup-signal (str filename ".csv") first-cols names thresholds) sr title)]
+        subtitle                                                            (str "Measurement: " index)
+        oz-data                                                             (signal->oz-data (setup-signal (str filename ".csv") first-cols names thresholds) sr title subtitle)]
     
+    (println (str "Reading: " (str filename ".csv") " - Outputting: " (str filename ".png")))
     (with-open [w (io/output-stream (str filename ".png"))]
       (.write w (oz/compile (plot oz-data) {:to-format :png})))))
 
