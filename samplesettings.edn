@@ -1,0 +1,10 @@
+{:cols       [0 1]
+ :names      [:midi :audio]
+ :thresholds [2 2]
+ :tails      [500 500]
+ :sr         500
+ :daw        "Studio One"
+ :buffer     128
+ :setting    "Minimum"
+ :version    "5.0.2"
+ :index      1}
