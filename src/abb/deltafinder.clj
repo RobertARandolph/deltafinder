@@ -89,12 +89,22 @@
 
 (defn delta-in-ms
   "Returns the delta between signals in milliseconds, given a sampling rate in khz"
-  [xs sr]
-  (float (/ (delta xs) sr)))
+  [xs scope-sr]
+  (-> (delta xs)
+      (/ scope-sr)
+      float))
+
+(defn delta-in-samples
+  "Returns the delta between signals in samples related to the signal sample rate, given sampling rates in khz"
+  [xs scope-sr signal-sr]
+  (-> (delta xs)
+      (* (/ signal-sr scope-sr))
+      Math/floor
+      int))
 
 (defn signal->oz-data
   "Takes a signal map, sample rate and title and returns a map for plotting."
-  [signal sr title index]
+  [signal scope-sr source-sr title index]
   (let [main-values (apply concat
                            (map (fn [x]
                                   (let [values (:values x)
@@ -107,19 +117,21 @@
                                 signal))
         midi-end    (:end (first signal))
         audio-start (:start (second signal))]
-    {:signal   main-values
-     :title    title
-     :index    index
-     :gap      [{:time midi-end}
-                {:time audio-start}]
-     :delay-ms (delta-in-ms signal sr)}))
+    {:signal       main-values
+     :title        title
+     :index        index
+     :gap          [{:time midi-end}
+                    {:time audio-start}]
+     :delay-ms     (delta-in-ms signal scope-sr)
+     :delay-sample (delta-in-samples signal scope-sr source-sr)}))
 
 
 (defn plot
-  [{:keys [title index signal delay-ms gap]}]
+  [{:keys [title index signal delay-ms delay-sample gap]}]
   {:$schema    "https://vega.github.io/schema/vega-lite/v4.json"
    :background "white"
-   :config     {:concat {:spacing -100}}
+   :config     {:padding 20
+                :concat  {:spacing -100}}
    :vconcat    [{:title    {:text     (str title " - " index)
                             :fontSize 64
                             :orient   "top"
@@ -146,15 +158,15 @@
                                     :scale {:domain [-2.5 8]}
                                     :type  "quantitative"}}}
                 {:width    1800
-                 :height   200
-                 :title    {:text     (str "Total Delay: " delay-ms "ms")
+                 :height   50
+                 :title    {:text     (format "Total Delay: %.2fms - %d samples" delay-ms delay-sample)
                             :fontSize 48
                             :orient   "bottom"                          
                             :align    "center"
-                            :dy       -60}
+                            :dy       10}
                  :data     {:values gap}
                  :mark     {:type        "line"
-                            :strokeWidth 200}
+                            :strokeWidth 50}
                  :encoding {:color {:value "#C44"}
                             :x     {:scale {:domain [0 7000]}
                                     :field "time"
@@ -162,15 +174,18 @@
 
 (defn -main
   [& args]
-  (let [{:keys [cols names thresholds sr daw buffer setting version indexs]} (clojure.edn/read-string (slurp (first *command-line-args*)))
-        first-cols                                                           (take 2 cols)]
-    (doseq [x indexs]
-      (let [filename (clojure.string/replace (str daw buffer setting x) #" " "")
-            title    (format "%s v%s - Buffer: %s - %s " daw version buffer setting)
-            oz-data  (signal->oz-data (setup-signal (str filename ".csv") first-cols names thresholds) sr title x)]
-        (println (str "Reading: " (str filename ".csv") " - Outputting: " (str filename ".png")))
-        (with-open [w (io/output-stream (str filename ".png"))]
-          (.write w (oz/compile (plot oz-data) {:to-format :png})))))))
+  (doseq [x *command-line-args*]
+    (let [{:keys [cols names thresholds scope-sr source-sr daw buffer setting version indexs]} (clojure.edn/read-string (slurp x))
+          first-cols                                                                           (take 2 cols)]
+      (doseq [x indexs]
+        (let [filename (clojure.string/replace (str daw buffer setting x) #" " "")
+              title    (format "%s v%s - Buffer: %s - %s" daw version buffer setting)
+              oz-data  (signal->oz-data (setup-signal (str filename ".csv") first-cols names thresholds) scope-sr source-sr title x)]
+          (println (str "Reading: " (str filename ".csv") " - Outputting: " (str filename ".png")))
+          (let [f (str "images/" filename ".png")]
+            (io/make-parents f)
+            (with-open [w (io/output-stream f)]
+              (.write w (oz/compile (plot oz-data) {:to-format :png})))))))))
 
 
 (comment
