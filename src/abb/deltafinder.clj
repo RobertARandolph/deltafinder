@@ -181,11 +181,12 @@
           first-cols                                                                           (take 2 cols)
           dir                                                                                  (first *command-line-args*)]
       (doseq [x indexs]
-        (let [filename (clojure.string/replace (str dir daw buffer setting x) #" " "")
-              title    (format "%s v%s - Buffer: %s - %s" daw version buffer setting)
-              oz-data  (signal->oz-data (setup-signal (str filename ".csv") first-cols names thresholds) scope-sr source-sr title x)]
+        (let [filename  (clojure.string/replace (str dir daw buffer setting x) #" " "")
+              imagename (clojure.string/replace (str dir "images/" daw buffer setting x ".png") #" " "")
+              title     (format "%s v%s - Buffer: %s - %s" daw version buffer setting)
+              oz-data   (signal->oz-data (setup-signal (str filename ".csv") first-cols names thresholds) scope-sr source-sr title x)]
           (println (str "Reading: " (str filename ".csv") " - Outputting: " (str filename ".png")))
-          (let [f (str dir "images/" filename ".png")]
+          (let [f imagename]
             (io/make-parents f)
             (with-open [w (io/output-stream f)]
               (.write w (oz/compile (plot oz-data) {:to-format :png})))))))))
