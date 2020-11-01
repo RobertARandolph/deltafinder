@@ -172,31 +172,33 @@
                                     :field "time"
                                     :type  "quantitative"}}}]})
 
+
 (defn -main
   [& args]
-  (doseq [x *command-line-args*]
+  (println (first *command-line-args*))
+  (doseq [x (filter #(.isFile %) (file-seq (io/file (first *command-line-args*))))]
     (let [{:keys [cols names thresholds scope-sr source-sr daw buffer setting version indexs]} (clojure.edn/read-string (slurp x))
-          first-cols                                                                           (take 2 cols)]
+          first-cols                                                                           (take 2 cols)
+          dir                                                                                  (first *command-line-args*)]
       (doseq [x indexs]
-        (let [filename (clojure.string/replace (str daw buffer setting x) #" " "")
+        (let [filename (clojure.string/replace (str dir daw buffer setting x) #" " "")
               title    (format "%s v%s - Buffer: %s - %s" daw version buffer setting)
               oz-data  (signal->oz-data (setup-signal (str filename ".csv") first-cols names thresholds) scope-sr source-sr title x)]
           (println (str "Reading: " (str filename ".csv") " - Outputting: " (str filename ".png")))
-          (let [f (str "images/" filename ".png")]
+          (let [f (str dir "images/" filename ".png")]
             (io/make-parents f)
             (with-open [w (io/output-stream f)]
               (.write w (oz/compile (plot oz-data) {:to-format :png})))))))))
 
 
-(comment
-  (:title (signal->oz-data (setup-signal "StudioOne512Medium.csv" [0 1] [:midi :audio] [2 2] ) [0 1] "Test Title"))
-  (oz/view! (plot (signal->oz-data (setup-signal "StudioOne128Minimum1.csv" [0 1] [:midi :audio] [2 2] ) [0 1] "Test Title")))
-  (oz/start-server!)
-  (-main "samplesettings.edn")
-  (with-open [writer (clojure.java.io/writer "test.json")]
-    (json/write test-plot writer))
-  {:cols [0 1] :names [:midi :audio] :thresholds [2 2] :sr 500 :daw "Studio One" :buffer 128 :setting "Minimum" :version "5.0.2" :index 1}
+#_(comment
+    (:title (signal->oz-data (setup-signal "StudioOne512Medium.csv" [0 1] [:midi :audio] [2 2] ) [0 1] "Test Title"))
+    (oz/view! (plot (signal->oz-data (setup-signal "StudioOne128Minimum1.csv" [0 1] [:midi :audio] [2 2] ) [0 1] "Test Title")))
+    (oz/start-server!)
+    (-main "samplesettings.edn")
+    (with-open [writer (clojure.java.io/writer "test.json")]
+      (json/write test-plot writer))
+    {:cols [0 1] :names [:midi :audio] :thresholds [2 2] :sr 500 :daw "Studio One" :buffer 128 :setting "Minimum" :version "5.0.2" :index 1}
 
-  (with-open [w (io/output-stream "/users/robertrandolph/Desktop/test.png")]
-    (.write w (oz/compile test-plot {:to-format :png})))
-  )
+    
+    )

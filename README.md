@@ -10,7 +10,7 @@ It's not generic, it won't do anything cool except take some csv and graph it wi
 
 Run the project directly:
 
-    $ clojure -M -m abb.deltafinder "settings.edn"
+    $ clojure -M -m abb.deltafinder "dir/"
 
 Where your edn looks something like this:
 
@@ -26,7 +26,7 @@ Where your edn looks something like this:
  :index      1} ;; index of file
 ```
 
-It will look for csv files in the form of `[daw][buffer][setting][index].csv` (without the [])
+It will look in the supplied directory for csv files in the form of `[daw][buffer][setting][index].csv` with corresponding settings files of `[daw][buffer][setting].edn` (without the [])
 
 ## License
 
